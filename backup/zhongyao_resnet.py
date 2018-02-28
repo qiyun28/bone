@@ -1,12 +1,18 @@
+@@ -0,0 +1,300 @@
 from __future__ import division
 
 import six
-from keras.models import Model
+from keras.models import Model, Sequential
 from keras.layers import (
     Input,
     Activation,
     Dense,
-    Flatten
+    Flatten,
+    concatenate,
+    Concatenate,
+    merge,
+    Merge,
+    Dropout
 )
 from keras.layers.convolutional import (
     Conv2D,
@@ -182,7 +188,7 @@ def _get_block(identifier):
 
 class ResnetBuilder(object):
     @staticmethod
-    def build(input_shape, num_outputs, block_fn, repetitions):
+    def build(input, num_outputs, block_fn, repetitions):
         """Builds a custom ResNet like architecture.
 
         Args:
@@ -196,76 +202,46 @@ class ResnetBuilder(object):
         Returns:
             The keras `Model`.
         """
-        _handle_dim_ordering()
-        if len(input_shape) != 3:
-            raise Exception("Input shape should be a tuple (nb_channels, nb_rows, nb_cols)")
-
-        # Permute dimension order if necessary
-        if K.image_dim_ordering() == 'tf':
-            input_shape = (input_shape[1], input_shape[2], input_shape[0])
+#        _handle_dim_ordering()
+#        if len(input_shape) != 3:
+#            raise Exception("Input shape should be a tuple (nb_channels, nb_rows, nb_cols)")
+#
+#        # Permute dimension order if necessary
+#        if K.image_dim_ordering() == 'tf':
+#            input_shape = (input_shape[1], input_shape[2], input_shape[0])
 
         # Load function from str if needed.
         block_fn = _get_block(block_fn)
 
-        input = Input(shape=input_shape)
-        conv1 = _conv_bn_relu(filters=64, kernel_size=(7, 7), strides=(2, 2))(input)
-        pool1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding="same")(conv1)
+#        input = Input(shape=input_shape)
+#        conv1 = input
+#        conv1 = _conv_bn_relu(filters=64, kernel_size=(7, 7), strides=(2, 2))(input)
+#        pool1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding="same")(conv1)
 
-        block = pool1
+        block = input
         filters = 64
         for i, r in enumerate(repetitions):
             block = _residual_block(block_fn, filters=filters, repetitions=r, is_first_layer=(i == 0))(block)
             filters *= 2
 
-        # Last activation
+#         Last activation
         block = _bn_relu(block)
 
         # Classifier block
-        block_shape = K.int_shape(block)
+#        block_shape = K.int_shape(block)
         pool2 = AveragePooling2D(pool_size=(block_shape[ROW_AXIS], block_shape[COL_AXIS]),
                                  strides=(1, 1))(block)
-        flatten1 = Flatten()(pool2)
-        dense = Dense(units=num_outputs, kernel_initializer="he_normal",
-                      activation="softmax")(flatten1)
+#        flatten1 = Flatten()(pool2)
+#        dense = Dense(units=num_outputs, kernel_initializer="he_normal",
+#                      activation="softmax")(flatten1)
 
-        model = Model(inputs=input, outputs=dense)
-        return model
-
-    @staticmethod
-    def build_bone(input_shape, num_outputs, block_fn, repetitions):
-        _handle_dim_ordering()
-        if len(input_shape) != 3:
-            raise Exception("Input shape should be a tuple (nb_channels, nb_rows, nb_cols)")
-
-        # Permute dimension order if necessary
-        if K.image_dim_ordering() == 'tf':
-            input_shape = (input_shape[1], input_shape[2], input_shape[0])
-
-        # Load function from str if needed.
-        block_fn = _get_block(block_fn)
-
-        input = Input(shape=input_shape)
-        conv1 = _conv_bn_relu(filters=64, kernel_size=(7, 7), strides=(2, 2))(input)
-        pool1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding="same")(conv1)
-
-        block = pool1
-        filters = 64
-        for i, r in enumerate(repetitions):
-            block = _residual_block(block_fn, filters=filters, repetitions=r, is_first_layer=(i == 0))(block)
-            filters *= 2
-
-        # Last activation
-        block = _bn_relu(block)
-
+#        model = Model(inputs=input, outputs=block)
         return block
 
     @staticmethod
-    def build_resnet_18(input_shape, num_outputs):
-        return ResnetBuilder.build(input_shape, num_outputs, basic_block, [2, 2, 2, 2])
-
-    @staticmethod
-    def build_resnet_18_bone(input_shape, num_outputs):
-        return ResnetBuilder.build_bone(input_shape, num_outputs, basic_block, [2, 2, 2, 2])
+    def build_resnet_18(input, num_outputs):
+#        return ResnetBuilder.build(input, num_outputs, basic_block, [2, 2, 2, 2])
+        return ResnetBuilder.build(input, num_outputs, basic_block, [2, 2, 2, 2])
 
     @staticmethod
     def build_resnet_34(input_shape, num_outputs):
@@ -284,25 +260,42 @@ class ResnetBuilder(object):
         return ResnetBuilder.build(input_shape, num_outputs, bottleneck, [3, 8, 36, 3])
 
     @staticmethod
-    def build_resnet_finger3(input_shape, jnt_num, num_outputs):
-        block = []
-        for i in range(jnt_num):
-            r = ResnetBuilder.build_resnet_18_bone(input_shape, num_outputs)
-        block.append(r)
-
-        # Classifier block
-        block_shape = K.int_shape(block)
-        pool2 = AveragePooling2D(pool_size=(block_shape[ROW_AXIS], block_shape[COL_AXIS]),
-                                 strides=(1, 1))(block)
-        flatten1 = Flatten()(pool2)
-        dense = Dense(units=num_outputs, kernel_initializer="he_normal",
-                      activation="softmax")(flatten1)
-
-        model = Model(inputs=input, outputs=dense)
-
+    def build_multi_input(input_shape, num_outputs):
+        _handle_dim_ordering()
+        if len(input_shape) != 3:
+            raise Exception("Input shape should be a tuple (nb_channels, nb_rows, nb_cols)")
+        # Permute dimension order if necessary
+        if K.image_dim_ordering() == 'tf':
+            input_shape = (input_shape[1], input_shape[2], input_shape[0])
+        input1 = Input(shape=input_shape)
+        input2 = Input(shape=input_shape)
+        input3=  Input(shape=input_shape)
+        c1 =ResnetBuilder.build_resnet_18(input1, num_outputs)
+        c2 =ResnetBuilder.build_resnet_18(input2, num_outputs)
+        c3 =ResnetBuilder.build_resnet_18(input3, num_outputs)
+        c4 =concatenate([c1, c2, c3])
+#        block_shape = K.int_shape(c4)
+#        pool2 = AveragePooling2D(pool_size=(block_shape[ROW_AXIS], block_shape[COL_AXIS]), strides=(1, 1))(c4)
+        flatten1 = Flatten()(c4)
+#        dense1 = Dense(units=512, kernel_initializer="he_normal", activation="softmax")(flatten1)
+#        dense = Dense(units=64, kernel_initializer="he_normal", activation="softmax")(dense1)
+        dense = Dense(units=num_outputs, kernel_initializer="he_normal", activation="softmax")(flatten1)
+#        dense1 = Dropout(0.1)(dense)
+        model = Model(inputs=[input1,input2,input3], outputs=[dense])
         return model
 
-# model = resnet.ResnetBuilder.build_resnet_finger3((img_channels, img_rows, img_cols), jnt_num, nb_classes)
-m = resnet.ResnetBuilder.build_resnet_finger3((1, 48, 48), 3, 19)
-m.summary()
-
+build_multi_input
+#inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+#input1 = Input((256, 256, 3))
+#input2 = Input((256, 256, 3))
+#input3=  Input((256, 256, 3))
+#c1 =ResnetBuilder.build_resnet_18(input1, 3)
+#c2 =ResnetBuilder.build_resnet_18(input2, 3)
+#c3 =ResnetBuilder.build_resnet_18(input3, 3)
+#c4 =concatenate([c1, c2, c3])
+#flatten1 = Flatten()(c4)
+#dense = Dense(units=3, kernel_initializer="he_normal",
+#              activation="softmax")(flatten1)
+#model = Model(inputs=[input1,input2,input3], outputs=[dense])
+m = ResnetBuilder.build_multi_input((3, 32, 32), 3)
+#m.summary()
