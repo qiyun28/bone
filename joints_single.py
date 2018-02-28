@@ -8,10 +8,10 @@ import glob
 
 # some global constants
 data_type = "png"
-label_path = "./label/"
-oriImg_path = "./train/"
-checking_path = "./for_checking/"
-joints_path = "./joints/"
+label_path = "./data/label/"
+oriImg_path = "./data/train/"
+checking_path = "./data/for_checking/"
+joints_path = "./data/joints/"
 pixel = 600
 _jntcsv = []
 

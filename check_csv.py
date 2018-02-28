@@ -1,7 +1,7 @@
 import argparse
 import cv2
 
-img_path = "./train/"
+img_path = "./data/train/"
 data_type = "png"
 
 

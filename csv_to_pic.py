@@ -2,10 +2,10 @@ import cv2
 import numpy as np
 
 data_type = "png"
-csv_name = "joints.csv"
-label_path = "./label/"
-oriImg_path = "./train/"
-joints_path = "./joints/"
+csv_name = "./data/joints.csv"
+label_path = "./data/label/"
+oriImg_path = "./data/train/"
+joints_path = "./data/joints/"
 pixel = 600
 
 _jntcsv = np.loadtxt(csv_name, dtype='int', delimiter=",")

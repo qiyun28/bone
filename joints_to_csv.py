@@ -8,10 +8,10 @@ import glob
 
 # some global constants
 data_type = "png"
-label_path = "./label/"
-oriImg_path = "./train/"
-checking_path = "./for_checking/"
-joints_path = "./joints/"
+label_path = "./data/label/"
+oriImg_path = "./data/train/"
+checking_path = "./data/for_checking/"
+joints_path = "./data/joints/"
 pixel = 600
 _jntcsv = []
 
@@ -190,7 +190,7 @@ if __name__ == "__main__":
         elif flag == 2:
             bone_err += 1
 
-    np.savetxt("joints.csv", np.asarray(_jntcsv), fmt='%u', delimiter=",")
+    np.savetxt("./data/joints.csv", np.asarray(_jntcsv), fmt='%u', delimiter=",")
 
     print("total contour error: " + str(con_err))
     print("total bone tracking error: " + str(bone_err))

@@ -10,7 +10,7 @@ How to Use
     - Auto-detected error images will be printed at terminal. No information of these joints are saved to csv.
 2. go through *"./for_checking"* folder to run another round of manual check.
 3. add missing information (error from step 1) and/or correct false information (error from step 2) from the csv
-    -  if you wish to check whether the edited information is correct run the following command for checking. A file named *"<filename>.png"* with joint dots will be saved
+    -  if you wish to check whether the edited information is correct run the following command for checking. A file named *"file_name.png"* with joint dots will be saved
         ```sh
         python check_csv.py <file_name,thumb1x,thumb1y,thumb2x,thumb2y,index1x,index1y,index2x,index2y,index3x,index3y,...,little3x,little3y>
         ```
