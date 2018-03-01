@@ -251,7 +251,7 @@ class ResnetBuilder(object):
         pool2 = AveragePooling2D(pool_size=(block_shape[ROW_AXIS], block_shape[COL_AXIS]),
                                  strides=(1, 1))(block)
         flatten1 = Flatten()(pool2)
-        
+
         return flatten1
 
     @staticmethod
@@ -297,22 +297,57 @@ class ResnetBuilder(object):
         input1 = Input(shape=input_shape)
         input2 = Input(shape=input_shape)
         input3 = Input(shape=input_shape)
+        input4 = Input(shape=input_shape)
+        input5 = Input(shape=input_shape)
+        input6 = Input(shape=input_shape)
+        input7 = Input(shape=input_shape)
+        input8 = Input(shape=input_shape)
+        input9 = Input(shape=input_shape)
+        input10 = Input(shape=input_shape)
+        input11 = Input(shape=input_shape)
+        input12 = Input(shape=input_shape)
+        input13 = Input(shape=input_shape)
+        input14 = Input(shape=input_shape)
 
         x1 = ResnetBuilder.build_resnet_18_bone(input1, num_outputs)
         x2 = ResnetBuilder.build_resnet_18_bone(input2, num_outputs)
         x3 = ResnetBuilder.build_resnet_18_bone(input3, num_outputs)
-        added = Add()([x1,x2,x3])
+        x4 = ResnetBuilder.build_resnet_18_bone(input1, num_outputs)
+        x5 = ResnetBuilder.build_resnet_18_bone(input2, num_outputs)
+        x6 = ResnetBuilder.build_resnet_18_bone(input3, num_outputs)
+        x7 = ResnetBuilder.build_resnet_18_bone(input1, num_outputs)
+        x8 = ResnetBuilder.build_resnet_18_bone(input2, num_outputs)
+        x9 = ResnetBuilder.build_resnet_18_bone(input1, num_outputs)
+        x10 = ResnetBuilder.build_resnet_18_bone(input2, num_outputs)
+        x11 = ResnetBuilder.build_resnet_18_bone(input3, num_outputs)
+        x12 = ResnetBuilder.build_resnet_18_bone(input3, num_outputs)
+        x13 = ResnetBuilder.build_resnet_18_bone(input3, num_outputs)
+        x14 = ResnetBuilder.build_resnet_18_bone(input3, num_outputs)
+
+        finger1 = Add()([x1,x2])
+        finger2 = Add()([x3,x4,x5])
+        finger3 = Add()([x6,x7,x8])
+        finger4 = Add()([x9,x10,x11])
+        finger5 = Add()([x12,x13,x14])
 
         # Classifier block
-        dense = Dense(units=num_outputs, kernel_initializer="he_normal",
-                      activation="softmax")(added)
+        finger1_dense = Dense(units=num_outputs)(finger1)
+        finger2_dense = Dense(units=num_outputs)(finger2)
+        finger3_dense = Dense(units=num_outputs)(finger3)
+        finger4_dense = Dense(units=num_outputs)(finger4)
+        finger5_dense = Dense(units=num_outputs)(finger5)
 
-        model = Model(inputs=[input1, input2, input3], outputs=dense)
+        hand = Add()([finger1_dense,finger2_dense,finger3_dense,finger4_dense,finger5_dense])
+
+        dense = Dense(units=num_outputs, kernel_initializer="he_normal",
+                      activation="softmax")(hand)
+
+        model = Model(inputs=[input1, input2, input3, input4, input5, input6, input7, input8, input9, input10, input11, input12, input13, input14], outputs=dense)
 
         return model
 
 # model = resnet.ResnetBuilder.build_resnet_finger3((img_channels, img_rows, img_cols), jnt_num, nb_classes)
-#m = ResnetBuilder.build_resnet_finger3((1, 48, 48), 19)
+m = ResnetBuilder.build_resnet_finger3((1, 48, 48), 19)
 #m = ResnetBuilder.build_resnet_18((1,48,48), 19)
-#m.summary()
+m.summary()
 
