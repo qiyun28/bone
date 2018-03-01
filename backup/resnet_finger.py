@@ -312,7 +312,7 @@ class ResnetBuilder(object):
         return model
 
 # model = resnet.ResnetBuilder.build_resnet_finger3((img_channels, img_rows, img_cols), jnt_num, nb_classes)
-#m = ResnetBuilder.build_resnet_finger3((1, 48, 48), 19)
+m = ResnetBuilder.build_resnet_finger3((1, 48, 48), 19)
 #m = ResnetBuilder.build_resnet_18((1,48,48), 19)
-#m.summary()
+m.summary()
 

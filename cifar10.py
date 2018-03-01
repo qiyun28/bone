@@ -18,7 +18,7 @@ import hand_bone
 #import pdb;pdb.set_trace();
 lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1), cooldown=0, patience=5, min_lr=0.5e-6)
 early_stopper = EarlyStopping(min_delta=0.001, patience=10)
-csv_logger = CSVLogger('resnet18_cifar10.csv')
+csv_logger = CSVLogger('resnet_bone.csv')
 
 #batch_size = 32
 #nb_classes = 10
@@ -43,7 +43,6 @@ img_channels = 1
 #y_train = np.zeros((50000,1))
 #X_test = np.zeros((10000,48,48,1))
 #y_test = np.zeros((10000,1))
-import pdb;pdb.set_trace();
 # Convert class vectors to binary class matrices.
 Y_train = np_utils.to_categorical(y_train, nb_classes)
 Y_test = np_utils.to_categorical(y_test, nb_classes)
@@ -52,23 +51,30 @@ X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
 
 # subtract mean and normalize
-mean_image = np.mean(X_train, axis=0)
-X_train -= mean_image
-X_test -= mean_image
-X_train /= 128.
-X_test /= 128.
+#mean_image = np.mean(X_train, axis=0)
+#X_train -= mean_image
+#X_test -= mean_image
+#X_train /= 128.
+#X_test /= 128.
+for i in range(len(X_train)):
+    mean_image = np.mean(X_train[i], axis=0)
+    X_train[i] -= mean_image
+    X_test[i] -= mean_image
+    X_train[i] /= 128.
+    X_test[i] /= 128.
 
-model = resnet.ResnetBuilder.build_resnet_18((img_channels, img_rows, img_cols), nb_classes)
+#model = resnet.ResnetBuilder.build_resnet_18((img_channels, img_rows, img_cols), nb_classes)
+model = resnet.ResnetBuilder.build_resnet_finger3((img_channels, img_rows, img_cols), nb_classes)
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
 
 if not data_augmentation:
     print('Not using data augmentation.')
-    model.fit(X_train, Y_train,
+    model.fit([X_train[0], X_train[1], X_train[2]], Y_train,
               batch_size=batch_size,
               nb_epoch=nb_epoch,
-              validation_data=(X_test, Y_test),
+              validation_data=([X_test[0], X_test[1], X_test[2]], Y_test),
               shuffle=True,
               callbacks=[lr_reducer, early_stopper, csv_logger])
 else:
